@@ -6,10 +6,12 @@ import com.example.logonrmlocal.githubaac.data.local.MeuBancoDeDados
 import com.example.logonrmlocal.githubaac.data.local.dao.UserDAO
 import com.example.logonrmlocal.githubaac.data.remote.UserService
 import com.example.logonrmlocal.githubaac.data.repositories.UserRepository
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executor
@@ -49,17 +51,26 @@ class AppModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(gson: Gson): Retrofit {
-        return Retrofit.Builder()
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .baseUrl("http://api.github.com")
+    fun provideOkhttp(): OkHttpClient {
+        return OkHttpClient.Builder()
+                .addNetworkInterceptor(StethoInterceptor())
                 .build()
     }
 
-    @Provides
-    @Singleton
-    fun provideUserService(retrofit: Retrofit) : UserService {
-        return retrofit.create(UserService::class.java)
+        @Provides
+        @Singleton
+        fun provideRetrofit(gson: Gson, client: OkHttpClient): Retrofit {
+            return Retrofit.Builder()
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .baseUrl("http://api.github.com")
+                    .client(client)
+                    .build()
+        }
+
+        @Provides
+        @Singleton
+        fun provideUserService(retrofit: Retrofit) : UserService {
+            return retrofit.create(UserService::class.java)
     }
 
     @Provides
